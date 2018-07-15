@@ -1,6 +1,6 @@
 package main
 
-import "fmt"
+import "log"
 
 import "github.com/Noah-Huppert/k8s-deploy/config"
 
@@ -9,8 +9,8 @@ func main() {
 	// Load config
 	cfg, err := config.NewConfig()
 	if err != nil {
-		fmt.Fatalf("error loading configuration: %s\n", err.Error())
+		log.Fatalf("error loading configuration: %s\n", err.Error())
 	}
 
-	fmt.Print(cfg)
+	log.Printf("%#v\n", cfg)
 }
