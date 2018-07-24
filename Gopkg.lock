@@ -32,6 +32,12 @@
   version = "v0.2.0"
 
 [[projects]]
+  name = "github.com/rs/zerolog"
+  packages = [".","internal/cbor","internal/json","log"]
+  revision = "77db4b4f350e31be66a57c332acb7721cf9ff9bb"
+  version = "v1.8.0"
+
+[[projects]]
   name = "github.com/sergi/go-diff"
   packages = ["diffmatchpatch"]
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
@@ -94,6 +100,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c1787ac1a01ae73959da9260401c8ff2c1620ac801f6f2c2e07755c47c53785f"
+  inputs-digest = "eb3a19bbdeb26480d62bd898343f0054838f1006ced1f52633d3462bd5926d02"
   solver-name = "gps-cdcl"
   solver-version = 1

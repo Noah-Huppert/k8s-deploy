@@ -1,16 +1,22 @@
 package main
 
-import "log"
+import (
+	"github.com/Noah-Huppert/k8s-deploy/config"
 
-import "github.com/Noah-Huppert/k8s-deploy/config"
+	"github.com/Noah-Huppert/golog"
+)
 
 // main is the command line tool's entry point
 func main() {
+	// Configure logger
+	logger := golog.NewStdLogger("k8s-deploy")
+
 	// Load config
+	// TODO: Find better logging library, maybe switch back to std
 	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Fatalf("error loading configuration: %s\n", err.Error())
+		logger.Fatalf("error loading configuration: %s", err.Error())
 	}
 
-	log.Printf("%#v\n", cfg)
+	logger.Debugf("%#v", cfg)
 }
