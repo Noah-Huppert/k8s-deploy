@@ -18,7 +18,7 @@ func NewConfig() (*Config, error) {
 		"to push container image to")
 
 	var containerDir string
-	flag.StringVar(&containerDir, "container-dir", "", "Directory where the "+
+	flag.StringVar(&containerDir, "container-dir", ".", "Directory where the "+
 		"container Dockerfile is located")
 
 	var version string
