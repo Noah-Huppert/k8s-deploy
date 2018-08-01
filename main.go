@@ -26,14 +26,18 @@ func main() {
 	// Build docker image
 	dockerTagStr := fmt.Sprintf("%s:%s", cfg.ContainerRepo, cfg.Version)
 
-	logger.Infof("Building docker image: %s", dockerTagStr)
+	logger.Infof("building docker image: %s", dockerTagStr)
 
-	err = docker.BuildContainer(ctx, cfg.ContainerDir, cfg.ContainerRepo,
-		cfg.Version)
+	buildOut, err := docker.BuildContainer(ctx, cfg.ContainerDir,
+		cfg.ContainerRepo, cfg.Version)
 
 	if err != nil {
 		logger.Fatalf("error building docker container: %s", err.Error())
 	}
 
-	logger.Infof("Built docker image: %s", dockerTagStr)
+	logger.Infof("built docker image: %s", dockerTagStr)
+
+	for _, line := range buildOut {
+		logger.Debugf("docker build output: %s", line)
+	}
 }
