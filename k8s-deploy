@@ -1,72 +1,90 @@
 #!/usr/bin/env bash
 #
 # USAGE
-#	k8s-deploy DOCKER_REPO DEPLOY_DIR
+#	k8s-deploy --docker-repo DOCKER_REPO --deploy-dir DEPLOY_DIR
 #
-# ARGUMENTS
-#	1. DOCKER_REPO    Name of docker repository to push docker image to
-#	2. DEPLOY_DIR     Directory which holds Helm packages. Each directory in 
-#                     the DEPLOY_DIR must be a Helm package.
-
-# git_head get git HEAD sha
-function git_head() {
-	echo $(git rev-parse --verify HEAD)
-}
+# OPTIONS
+#	1. --docker-repo DOCKER_REPO    Name of docker repository to push docker
+#                                   image to
+#
+#	2. --deploy-dir DEPLOY_DIR      Directory which holds Helm packages. Each
+#                                   directory in the DEPLOY_DIR must be a
+#                                   Helm package.
 
 # Arguments
-docker_repo="$1"
-if [ -z "$docker_repo" ]; then
-	echo "Error: DOCKER_REPO argument must be provided" >&2
-	exit 1
-fi
+while [ ! -z "$1" ]; do
+	if [[ "$1" == "--docker-repo" ]]; then
+		shift
+		docker_repo="$1"
+		shift
 
-deploy_dir="$2"
-if [ -z "$deploy_dir" ]; then
-	echo "Error: DEPLOY_DIR argument must be provided" >&2
-	exit 1
-fi
-
-# Build docker image
-echo "Building docker image"
-
-if ! git rev-parse --verify HEAD | read version; then
-	echo "Error: failed to get git head sha" >&2
-	exit 1
-fi
-
-docker_tag="$docker_repo:$version"
-
-if ! docker build -t "$docker_tag" .; then
-	echo "Error: failed to build docker image" >&2
-	exit 1
-fi
-
-# Push docker image
-echo "Pushing docker image"
-if ! docker push "$docker_tag"; then
-	echo "Error: failed to push docker image" >&2
-	exit 1
-fi
-
-# Helm packages
-for pkg_dir in $(find $deploy_dir); do
-	echo "Helm package: $pkg_dir"
-
-	# Package
-	if ! helm package "$pkg_dir"; then
-		echo "Error: failed to build helm package" >&2
-		exit 1
+		if [ -z "$docker_repo" ]; then
+			echo "Error: DOCKER_REPO argument must be provided" >&2
+			exit 1
+		fi
 	fi
 
-	# Get deployment name
-	deployment_name="$pkg"
-	if [ -f "$pkg_dir/DEPLOYMENT_NAME" ]; then
-		deployment_name=$(cat "$pkg_dir/DEPLOYMENT_NAME")
-	fi
+	if [[ "$1" == "--deploy-dir" ]]; then
+		shift
+		deploy_dir="$1"
+		shift
 
-	# Deploy
-	if ! helm upgrade --install "$deployment_name" "$pkg_dir"; then
-		echo "Error: failed to deploy helm package" >&2
-		exit 1
+		if [ -z "$deploy_dir" ]; then
+			echo "Error: DEPLOY_DIR argument must be provided" >&2
+			exit 1
+		fi
 	fi
 done
+
+# Perform docker deploy actions if --docker-repo option provided
+if [ ! -z "$docker_repo" ]; then
+	# Build docker image
+	echo "Building docker image"
+
+	if ! git rev-parse --verify HEAD | read version; then
+		echo "Error: failed to get git head sha" >&2
+		exit 1
+	fi
+
+	docker_tag="$docker_repo:$version"
+
+	if ! docker build -t "$docker_tag" .; then
+		echo "Error: failed to build docker image" >&2
+		exit 1
+	fi
+
+	# Push docker image
+	echo "Pushing docker image"
+	if ! docker push "$docker_tag"; then
+		echo "Error: failed to push docker image" >&2
+		exit 1
+	fi
+fi
+
+# Perform helm deploy actions if --deploy-dir option provided
+if [ ! -z "$deploy_dir" ]; then
+	echo "Deploying Helm charts"
+
+	# Helm packages
+	for pkg_dir in $(find $deploy_dir); do
+		echo "Helm chart: $pkg_dir"
+
+		# Package
+		if ! helm package "$pkg_dir"; then
+			echo "Error: failed to build helm package" >&2
+			exit 1
+		fi
+
+		# Get deployment name
+		deployment_name="$pkg"
+		if [ -f "$pkg_dir/DEPLOYMENT_NAME" ]; then
+			deployment_name=$(cat "$pkg_dir/DEPLOYMENT_NAME")
+		fi
+
+		# Deploy
+		if ! helm upgrade --install "$deployment_name" "$pkg_dir"; then
+			echo "Error: failed to deploy helm package" >&2
+			exit 1
+		fi
+	done
+fi
