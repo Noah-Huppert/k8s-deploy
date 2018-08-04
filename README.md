@@ -26,4 +26,4 @@ Benefits:
 	- Just download and run a single binary
 
 # Usage
-Execute the `k8s-deploy` binary.
+Execute the `k8s-deploy` script.
