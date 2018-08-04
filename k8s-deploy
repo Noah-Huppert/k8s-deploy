@@ -10,6 +10,8 @@
 #	--deploy-dir DEPLOY_DIR      Directory which holds Helm packages. Each
 #                                directory in the DEPLOY_DIR must be a
 #                                Helm package.
+#
+#	--rm-deploy                  Remove deployment from cluster
 
 # Arguments
 while [ ! -z "$1" ]; do
@@ -33,6 +35,11 @@ while [ ! -z "$1" ]; do
 			echo "Error: DEPLOY_DIR argument must be provided" >&2
 			exit 1
 		fi
+	fi
+
+	if [[ "$1" == "--rm-deploy" ]]; then
+		shift
+		rm_deploy="true"
 	fi
 done
 
@@ -71,13 +78,6 @@ if [ ! -z "$deploy_dir" ]; then
 
 		echo "Helm chart: $pkg_dir"
 
-		# Package
-		echo "Building helm chart"
-		if ! helm package "$pkg_dir"; then
-			echo "Error: failed to build helm package" >&2
-			exit 1
-		fi
-
 		# Get deployment name
 		deployment_name="$pkg"
 		if [ -f "$pkg_dir/DEPLOYMENT_NAME" ]; then
@@ -90,11 +90,24 @@ if [ ! -z "$deploy_dir" ]; then
 			namespace_name=$(cat "$pkg_dir/NAMESPACE_NAME")
 		fi
 
-		# Deploy
-		echo "Deploying helm chart"
-		if ! helm upgrade --install --namespace "$namespace_name" "$deployment_name" "$pkg_dir"; then
-			echo "Error: failed to deploy helm package" >&2
-			exit 1
+
+		if [[ "$rm_deploy" == "true" ]]; then
+			echo "Removing"
+			helm delete --purge "$deployment_name"
+		else
+			# Package
+			echo "Building helm chart"
+			if ! helm package "$pkg_dir"; then
+				echo "Error: failed to build helm package" >&2
+				exit 1
+			fi
+		
+			# Deploy
+			echo "Deploying helm chart"
+			if ! helm upgrade --install --namespace "$namespace_name" "$deployment_name" "$pkg_dir"; then
+				echo "Error: failed to deploy helm package" >&2
+				exit 1
+			fi
 		fi
 	done
 fi
