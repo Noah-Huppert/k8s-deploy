@@ -1,5 +1,5 @@
 # Kubernetes Deploy
-Kubernetes deployment command line tool
+Kubernetes deployment command line tool.
 
 # Table Of Contents
 - [Overview](#overview)
@@ -23,7 +23,8 @@ Benefits:
 - Can run anywhere
 	- No continuous integration product specific configuration
 - Easy to setup and use
-	- Just download and run a single binary
+	- A simple bash script
+	- Just download and run
 
 # Usage
 Execute the `k8s-deploy` script.
