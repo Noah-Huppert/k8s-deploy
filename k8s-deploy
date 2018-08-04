@@ -1,7 +1,8 @@
 #/usr/bin/env bash
+# vim: filetype=sh
 #
 # USAGE
-#	k8s-deploy --docker-repo DOCKER_REPO --deploy-dir DEPLOY_DIR
+#	k8s-deploy [--docker-repo DOCKER_REPO] [--deploy-dir DEPLOY_DIR] [--rm-deploy]
 #
 # OPTIONS
 #	--docker-repo DOCKER_REPO    Name of docker repository to push docker
@@ -42,10 +43,19 @@ while [ ! -z "$1" ]; do
 	fi
 done
 
+echo "Configuration"
+echo "    Docker repo: $docker_repo"
+echo "    Deploy dir : $deploy_dir"
+echo "    RM deploy  : $rm_deploy"
+
 # Perform docker deploy actions if --docker-repo option provided
 if [ ! -z "$docker_repo" ]; then
+	echo "##########################"
+	echo "# Deploying Docker image #"
+	echo "##########################"
+
 	# Build docker image
-	echo "Building docker image"
+	echo "===== Building Docker image"
 
 	if ! git rev-parse --verify HEAD | read version; then
 		echo "Error: failed to get git head sha" >&2
@@ -60,7 +70,7 @@ if [ ! -z "$docker_repo" ]; then
 	fi
 
 	# Push docker image
-	echo "Pushing docker image"
+	echo "===== Pushing Docker image"
 	if ! docker push "$docker_tag"; then
 		echo "Error: failed to push docker image" >&2
 		exit 1
@@ -69,13 +79,13 @@ fi
 
 # Perform helm deploy actions if --deploy-dir option provided
 if [ ! -z "$deploy_dir" ]; then
-	echo "Deploying Helm charts"
+	echo "#########################"
+	echo "# Deploying Helm charts #"
+	echo "#########################"
 
 	# Helm packages
 	for pkg in $(find helm-charts -mindepth 1 -maxdepth 1 -type d); do
 		pkg_dir="$(pwd)/$pkg"
-
-		echo "Helm chart: $pkg_dir"
 
 		# Get deployment name
 		deployment_name="$pkg"
@@ -89,20 +99,28 @@ if [ ! -z "$deploy_dir" ]; then
 			namespace_name=$(cat "$pkg_dir/NAMESPACE_NAME")
 		fi
 
+		echo "     Helm chart     : $pkg"
+		echo "     Helm chart path: $pkg_dir"
+		echo "     Deployment name: $deployment_name"
+		echo "     Namespace name : $namespace_name"
+
 
 		if [[ "$rm_deploy" == "true" ]]; then
-			echo "Removing"
-			helm delete --purge "$deployment_name"
+			# Undeploy
+			echo "===== Removing Helm chart deployment"
+			if ! helm delete --purge "$deployment_name"; then
+				echo "Error: failed to removing Helm chart deployment" >&2
+				exit 1
 		else
 			# Package
-			echo "Building helm chart"
+			echo "===== Building Helm chart"
 			if ! helm package "$pkg_dir"; then
 				echo "Error: failed to build helm package" >&2
 				exit 1
 			fi
 		
 			# Deploy
-			echo "Deploying helm chart"
+			echo "===== Deploying Helm chart"
 			if ! helm upgrade --install --namespace "$namespace_name" "$deployment_name" "$pkg_dir"; then
 				echo "Error: failed to deploy helm package" >&2
 				exit 1
