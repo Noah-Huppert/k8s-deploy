@@ -24,9 +24,7 @@ while [ ! -z "$1" ]; do
 			echo "Error: DOCKER_REPO argument must be provided" >&2
 			exit 1
 		fi
-	fi
-
-	if [[ "$1" == "--deploy-dir" ]]; then
+	elif [[ "$1" == "--deploy-dir" ]]; then
 		shift
 		deploy_dir="$1"
 		shift
@@ -35,11 +33,12 @@ while [ ! -z "$1" ]; do
 			echo "Error: DEPLOY_DIR argument must be provided" >&2
 			exit 1
 		fi
-	fi
-
-	if [[ "$1" == "--rm-deploy" ]]; then
+	elif [[ "$1" == "--rm-deploy" ]]; then
 		shift
 		rm_deploy="true"
+	else
+		echo "Error: unknown option \"$1\"" >&2
+		exit 1
 	fi
 done
 
