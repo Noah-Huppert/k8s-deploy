@@ -54,15 +54,18 @@ if [ ! -z "$docker_repo" ]; then
 	echo "# Deploying Docker image #"
 	echo "##########################"
 
-	# Build docker image
-	echo "===== Building Docker image"
-
+	# Build docker image tag
 	if ! git rev-parse --verify HEAD | read version; then
 		echo "Error: failed to get git head sha" >&2
 		exit 1
 	fi
 
 	docker_tag="$docker_repo:$version"
+
+	echo "Docker tag: $docker_tag"
+
+	# Build docker image
+	echo "===== Building Docker image"
 
 	if ! docker build -t "$docker_tag" .; then
 		echo "Error: failed to build docker image" >&2
