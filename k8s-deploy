@@ -111,6 +111,7 @@ if [ ! -z "$deploy_dir" ]; then
 			if ! helm delete --purge "$deployment_name"; then
 				echo "Error: failed to removing Helm chart deployment" >&2
 				exit 1
+			fi
 		else
 			# Package
 			echo "===== Building Helm chart"
