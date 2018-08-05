@@ -84,7 +84,7 @@ if [ ! -z "$deploy_dir" ]; then
 	echo "#########################"
 
 	# Helm packages
-	for pkg in $(find helm-charts -mindepth 1 -maxdepth 1 -type d); do
+	for pkg in $(find "$deploy_dir" -mindepth 1 -maxdepth 1 -type d); do
 		pkg_dir="$(pwd)/$pkg"
 
 		# Get deployment name
