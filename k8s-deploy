@@ -79,6 +79,9 @@ if [ ! -z "$docker_repo" ]; then
 		echo "Error: failed to push docker image" >&2
 		exit 1
 	fi
+
+	# Set argument so that helm deploy will use correct docker tag
+	set_args="--set image.tag=$version"
 fi
 
 # Perform helm deploy actions if --deploy-dir option provided
@@ -126,7 +129,7 @@ if [ ! -z "$deploy_dir" ]; then
 		
 			# Deploy
 			echo "===== Deploying Helm chart"
-			if ! helm upgrade --install --namespace "$namespace_name" "$deployment_name" "$pkg_dir"; then
+			if ! helm upgrade --install --namespace "$namespace_name" $set_args	"$deployment_name" "$pkg_dir"; then
 				echo "Error: failed to deploy helm package" >&2
 				exit 1
 			fi
