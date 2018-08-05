@@ -55,7 +55,8 @@ if [ ! -z "$docker_repo" ]; then
 	echo "##########################"
 
 	# Build docker image tag
-	if ! git rev-parse --verify HEAD | read version; then
+	version=$(git rev-parse --verify HEAD)
+	if [[ "$!" != "0" ]]; then
 		echo "Error: failed to get git head sha" >&2
 		exit 1
 	fi
