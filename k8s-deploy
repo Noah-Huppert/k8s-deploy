@@ -13,6 +13,27 @@
 #                                Helm package.
 #
 #	--rm-deploy                  Remove deployment from cluster
+#
+# BEHAVIOR
+#	If the --docker-repo option is provided:
+#		Builds and pushes docker image to specified DOCKER_REPO.
+#
+#	If the --deploy-dir option is provided: 
+#		Expects each sub-directory in the DEPLOY_DIR to be a Helm chart. Builds 
+#		and deploys each Helm chart.
+#
+#		If a sub-directory in the DEPLOY_DIR is not a Helm chart tell the tool 
+#		to ignore this directory by placing a file named K8S_DEPLOY_IGNORE.
+#
+#		If the DEPLOYMENT_NAME file is present in a Helm chart directory the
+#		contents of this file will be used as the Helm chart deployment name.
+#		If this file is not present the path to the Helm chart directory will 
+#		be used as the deployment name.
+#
+#		If the NAMESPACE_NAME file is present in a Helm chart directory the 
+#		namespace the Helm chart will be deployed will be the contents of this
+#		file. If the file is not present the name of the deployment will be 
+#		used as the namespace.
 
 # Arguments
 while [ ! -z "$1" ]; do
@@ -93,6 +114,12 @@ if [ ! -z "$deploy_dir" ]; then
 	# Helm packages
 	for pkg in $(find "$deploy_dir" -mindepth 1 -maxdepth 1 -type d); do
 		pkg_dir="$(pwd)/$pkg"
+
+		# Check if K8S_DEPLOY_IGNORE file is present
+		if [ -f "$pkg_dir/K8S_DEPLOY_IGNORE" ]; then
+			echo "===== Ignoring directory: \"$pkg_dir\""
+			continue
+		fi
 
 		# Get deployment name
 		deployment_name="$pkg"
