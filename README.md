@@ -27,4 +27,7 @@ Benefits:
 	- Just download and run
 
 # Usage
-Execute the `k8s-deploy` script.
+Execute the `k8s-deploy` script.  
+
+A wrapper script named `deploy.sh` is also provided in the repository. This 
+script will automatically download the latest `k8s-deploy` file and execute it.
