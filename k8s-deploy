@@ -37,7 +37,8 @@
 #
 #		If the DEPLOY_ARGS file is present in a Helm chart directory the
 #		arguments present in this file will be passed to helm when the chart
-#		is deployed.
+#		is deployed. These deployment arguments should be written with Helm 
+#		chart directory as the current working directory.
 
 # Check for k8s-deploy update if installed via submodule
 function is_submodule() {
@@ -198,14 +199,24 @@ if [ ! -z "$deploy_dir" ]; then
 		else
 			# Package
 			echo "===== Building Helm chart"
-			if ! helm package "$pkg_dir"; then
+			(cd "$pkg_dir" && helm package .)
+
+			if [[ "$?" != "0" ]]; then
 				echo "Error: failed to build helm package" >&2
 				exit 1
 			fi
 		
 			# Deploy
 			echo "===== Deploying Helm chart"
-			if ! helm upgrade --install --namespace "$namespace_name" $set_args $deploy_args "$deployment_name" "$pkg_dir"; then
+			(cd "$pkg_dir" && 
+				helm upgrade --install \
+					--namespace "$namespace_name" \
+					$set_args \
+					$deploy_args \
+					"$deployment_name" \
+					.)
+
+			if [[ "$?" != "0" ]]; then
 				echo "Error: failed to deploy helm package" >&2
 				exit 1
 			fi
