@@ -8,13 +8,13 @@ Kubernetes deployment command line tool.
 
 # Overview
 The Kubernetes deploy tool packages an opinionated Kubernetes deployment 
-process into a single easy to use binary.
+process into a single easy to use sript.
 
 It will complete the following steps:
 
-- Build and tag container
-- Push container to registry
-- Deploy Helm chart to Kubernetes cluster
+- Build and tag Docker image
+- Push Docker image to registry
+- Deploy Helm charts to Kubernetes cluster
 
 Benefits:
 
