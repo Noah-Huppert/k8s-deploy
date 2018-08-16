@@ -31,7 +31,7 @@ Benefits:
 Add the Kubernetes deploy repository as a submodule:
 
 ```
-git submodule add git@github.com:Noah-Huppert/k8s-deploy.git deploy/tools/k8s-deploy
+git submodule add git@github.com:Noah-Huppert/k8s-deploy.git deploy/k8s-deploy
 ```
 
 # Usage
