@@ -37,8 +37,9 @@
 
 # Check for k8s-deploy update if installed via submodule
 function is_submodule() {
-	(cd "$(git rev-parse --show-toplevel)/.." &&
-	git rev-parse --is-inside-work-tree) | grep -q true
+	(cd "$(dirname $0)" &&
+		cd "$(git rev-parse --show-toplevel)/.." &&
+		git rev-parse --is-inside-work-tree) | grep -q true
 }
 
 if is_submodule; then
