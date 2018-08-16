@@ -52,7 +52,7 @@ if is_submodule; then
 	fi
 
 	# Get local commit sha
-	local_sha=$(git rev-parse HEAD)
+	local_sha=$(cd "$(dirname $0)" && git rev-parse HEAD)
 
 	if [[ "$?" != "0" ]]; then
 		echo "Error: failed to get latest git commit locally" >&2
