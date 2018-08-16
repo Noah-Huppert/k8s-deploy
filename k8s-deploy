@@ -62,6 +62,8 @@ if is_submodule; then
 	# Check if we have the latest version
 	if [[ "$local_sha" != "$remote_sha" ]]; then
 		echo "An update is available. Update by running:"
+		echo "    Current version: $local_sha"
+		echo "    New version    : $remote_sha"
 		echo
 		echo "    git submodule update --remote"
 
