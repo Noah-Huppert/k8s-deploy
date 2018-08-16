@@ -35,6 +35,41 @@
 #		file. If the file is not present the name of the deployment will be 
 #		used as the namespace.
 
+# Check for k8s-deploy update if installed via submodule
+function is_submodule() {
+	(cd "$(git rev-parse --show-toplevel)/.." &&
+	git rev-parse --is-inside-work-tree) | grep -q true
+}
+
+if is_submodule; then
+	# Get latest commit sha from remote
+	remote_sha=$(git ls-remote origin HEAD | awk '{ print $1 }')
+
+	if [[ "$?" != "0" ]]; then
+		echo "Error: failed to get latest git commit from remote" >&2
+		exit 1
+	fi
+
+	# Get local commit sha
+	local_sha=$(git rev-parse HEAD)
+
+	if [[ "$?" != "0" ]]; then
+		echo "Error: failed to get latest git commit locally" >&2
+		exit 1
+	fi
+
+	# Check if we have the latest version
+	if [[ "$local_sha" != "$remote_sha" ]]; then
+		echo "An update is available. Update by running:"
+		echo
+		echo "    git submodule update --remote"
+
+		exit 1
+	else
+		echo "k8s-deploy tool is up to date"
+	fi
+fi
+
 # Arguments
 while [ ! -z "$1" ]; do
 	if [[ "$1" == "--docker-repo" ]]; then

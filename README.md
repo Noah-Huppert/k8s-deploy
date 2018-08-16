@@ -3,6 +3,7 @@ Kubernetes deployment command line tool.
 
 # Table Of Contents
 - [Overview](#overview)
+- [Install](#install)
 - [Usage](#usage)
 
 # Overview
@@ -26,8 +27,12 @@ Benefits:
 	- A simple bash script
 	- Just download and run
 
+# Install
+Add the Kubernetes deploy repository as a submodule:
+
+```
+git submodule add git@github.com:Noah-Huppert/k8s-deploy.git deploy/tools/k8s-deploy
+```
+
 # Usage
 Execute the `k8s-deploy` script.  
-
-A wrapper script named `deploy.sh` is also provided in the repository. This 
-script will automatically download the latest `k8s-deploy` file and execute it.
