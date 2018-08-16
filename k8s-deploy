@@ -34,6 +34,10 @@
 #		namespace the Helm chart will be deployed will be the contents of this
 #		file. If the file is not present the name of the deployment will be 
 #		used as the namespace.
+#
+#		If the DEPLOY_ARGS file is present in a Helm chart directory the
+#		arguments present in this file will be passed to helm when the chart
+#		is deployed.
 
 # Check for k8s-deploy update if installed via submodule
 function is_submodule() {
@@ -171,10 +175,17 @@ if [ ! -z "$deploy_dir" ]; then
 			namespace_name=$(cat "$pkg_dir/NAMESPACE_NAME")
 		fi
 
-		echo "     Helm chart     : $pkg"
-		echo "     Helm chart path: $pkg_dir"
-		echo "     Deployment name: $deployment_name"
-		echo "     Namespace name : $namespace_name"
+		# Get deploy arguments
+		deploy_args=""
+		if [ -f "$pkg_dir/DEPLOY_ARGS" ]; then
+			deploy_args=$(cat "$pkg_dir/DEPLOY_ARGS")
+		fi
+
+		echo "    Helm chart      : $pkg"
+		echo "    Helm chart path : $pkg_dir"
+		echo "    Deployment name : $deployment_name"
+		echo "    Namespace name  : $namespace_name"
+		echo "    Deploy arguments: $deploy_args"
 
 
 		if [[ "$rm_deploy" == "true" ]]; then
@@ -194,7 +205,7 @@ if [ ! -z "$deploy_dir" ]; then
 		
 			# Deploy
 			echo "===== Deploying Helm chart"
-			if ! helm upgrade --install --namespace "$namespace_name" $set_args	"$deployment_name" "$pkg_dir"; then
+			if ! helm upgrade --install --namespace "$namespace_name" $set_args $deploy_args "$deployment_name" "$pkg_dir"; then
 				echo "Error: failed to deploy helm package" >&2
 				exit 1
 			fi
