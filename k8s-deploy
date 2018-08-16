@@ -44,7 +44,7 @@ function is_submodule() {
 
 if is_submodule; then
 	# Get latest commit sha from remote
-	remote_sha=$(git ls-remote origin HEAD | awk '{ print $1 }')
+	remote_sha=$(cd "$(dirname $0)" && git ls-remote origin HEAD | awk '{ print $1 }')
 
 	if [[ "$?" != "0" ]]; then
 		echo "Error: failed to get latest git commit from remote" >&2
