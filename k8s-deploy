@@ -2,23 +2,40 @@
 # vim: filetype=sh
 #
 # USAGE
-#	k8s-deploy [--docker-repo DOCKER_REPO] [--deploy-dir DEPLOY_DIR] [--rm-deploy]
+#	k8s-deploy STAGES...
 #
-# OPTIONS
-#	--docker-repo DOCKER_REPO    Name of docker repository to push docker
-#                                image to
+# ARGUMENTS
+#	1. STAGES    Names of the deploy stages to run. Valid stage values are:
 #
-#	--deploy-dir DEPLOY_DIR      Directory which holds Helm packages. Each
-#                                directory in the DEPLOY_DIR must be a
-#                                Helm package.
+#                    - docker: Builds and pushes a Docker image
+#                    - deploy: Packages and deploys Helm charts
+#                    - rm-deploy: Remove all deployed Helm charts from cluster
 #
-#	--rm-deploy                  Remove deployment from cluster
+#			     Note that the deploy and rm-deploy stages can not be specified
+#				 at the same time.
+#
+# CONFIGURATION
+#	Configuration options should be stored in the .k8s-deploy file. It should be
+#	located in the directory which you invoke the k8s-deploy tool.
+#
+#	The .k8s-deploy configuration file will be sourced when the k8s-deploy tool
+#	runs.
+#
+#	The following environment variables should be exported:
+#
+#	DOCKER_REPO    Name of docker repository to push docker image to
+#
+#	DEPLOY_DIR     Directory which holds Helm packages. Each directory in the
+#                  DEPLOY_DIR must be a Helm package.
+#
+#	If a .k8s-deploy configuration file does not exist, it is expected that the 
+#	above environment variables exist in the environment via some other method.
 #
 # BEHAVIOR
-#	If the --docker-repo option is provided:
+#	If the docker stage is provided:
 #		Builds and pushes docker image to specified DOCKER_REPO.
 #
-#	If the --deploy-dir option is provided: 
+#	If the deploy stage is provided: 
 #		Expects each sub-directory in the DEPLOY_DIR to be a Helm chart. Builds 
 #		and deploys each Helm chart.
 #
@@ -39,6 +56,11 @@
 #		arguments present in this file will be passed to helm when the chart
 #		is deployed. These deployment arguments should be written with Helm 
 #		chart directory as the current working directory.
+#
+#	If the rm-deplot stage is provided:
+#		Traverses the DEPLOY_DIR in the same way the deploy stage would. However
+#		instead of deploying each Helm chart it comes across it removes each
+#		Helm chart it comes across
 
 # Check for k8s-deploy update if installed via submodule
 function is_submodule() {
@@ -80,42 +102,50 @@ if is_submodule; then
 	fi
 fi
 
+# Load configuration
+if [ -f ".k8s-deploy" ]; then
+	. ./.k8s-deploy
+fi
+
 # Arguments
+stage_docker="false"
+stage_deploy="false"
+stage_rm_deploy="false"
+
 while [ ! -z "$1" ]; do
-	if [[ "$1" == "--docker-repo" ]]; then
-		shift
-		docker_repo="$1"
-		shift
+	if [[ "$1" == "docker" ]]; then
+		stage_docker="true"
 
-		if [ -z "$docker_repo" ]; then
-			echo "Error: DOCKER_REPO argument must be provided" >&2
-			exit 1
-		fi
-	elif [[ "$1" == "--deploy-dir" ]]; then
-		shift
-		deploy_dir="$1"
-		shift
+	elif [[ "$1" == "deploy" ]]; then
+		stage_deploy="true"
 
-		if [ -z "$deploy_dir" ]; then
-			echo "Error: DEPLOY_DIR argument must be provided" >&2
-			exit 1
-		fi
-	elif [[ "$1" == "--rm-deploy" ]]; then
-		shift
-		rm_deploy="true"
+	elif [[ "$1" == "rm-deploy" ]]; then
+		stage_rm_deploy="true"
 	else
-		echo "Error: unknown option \"$1\"" >&2
+		echo "Error: unknown stage \"$1\"" >&2
 		exit 1
 	fi
+
+	shift
 done
 
-echo "Configuration"
-echo "    Docker repo: $docker_repo"
-echo "    Deploy dir : $deploy_dir"
-echo "    RM deploy  : $rm_deploy"
+# Check that deploy and rm-deploy stages aren't specified at same time
+if [[ "$stage_deploy" == "true" && "stage_rm_deploy" == "true" ]]; then
+	echo "Error: deploy and rm-deploy stages can not be specified at the same time" >&2
+	exit 1
+fi
 
-# Perform docker deploy actions if --docker-repo option provided
-if [ ! -z "$docker_repo" ]; then
+echo "Configuration"
+echo "    Docker repo: $DOCKER_REPO"
+echo "    Deploy dir : $DEPLOY_DIR"
+echo
+echo "Stages"
+echo "    Docker       : $stage_docker"
+echo "    Deploy       : $stage_deploy"
+echo "    Remove deploy: $stage_rm_deploy"
+
+# Perform docker deploy
+if [[ "$stage_docker" == "true" ]]; then
 	echo "##########################"
 	echo "# Deploying Docker image #"
 	echo "##########################"
@@ -127,7 +157,7 @@ if [ ! -z "$docker_repo" ]; then
 		exit 1
 	fi
 
-	docker_tag="$docker_repo:$version"
+	docker_tag="$DOCKER_REPO:$version"
 
 	echo "Docker tag: $docker_tag"
 
@@ -150,14 +180,14 @@ if [ ! -z "$docker_repo" ]; then
 	set_args="--set image.tag=$version"
 fi
 
-# Perform helm deploy actions if --deploy-dir option provided
-if [ ! -z "$deploy_dir" ]; then
+# Perform helm deploy actions
+if [[ "$stage_deploy" == "true" || "$stage_rm_deploy" == "true" ]]; then
 	echo "#########################"
 	echo "# Deploying Helm charts #"
 	echo "#########################"
 
 	# Helm packages
-	for pkg in $(find "$deploy_dir" -mindepth 1 -maxdepth 1 -type d); do
+	for pkg in $(find "$DEPLOY_DIR" -mindepth 1 -maxdepth 1 -type d); do
 		pkg_dir="$(pwd)/$pkg"
 
 		# Check if K8S_DEPLOY_IGNORE file is present
@@ -191,7 +221,7 @@ if [ ! -z "$deploy_dir" ]; then
 		echo "    Deploy arguments: $deploy_args"
 
 
-		if [[ "$rm_deploy" == "true" ]]; then
+		if [[ "$stage_rm_deploy" == "true" ]]; then
 			# Undeploy
 			echo "===== Removing Helm chart deployment"
 			if ! helm delete --purge "$deployment_name"; then
