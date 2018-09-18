@@ -144,6 +144,13 @@ echo "    Docker       : $stage_docker"
 echo "    Deploy       : $stage_deploy"
 echo "    Remove deploy: $stage_rm_deploy"
 
+# Get latest git commit to use as application version
+version=$(git rev-parse --verify HEAD)
+if [[ "$?" != "0" ]]; then
+	echo "Error: failed to get git head sha" >&2
+	exit 1
+fi
+
 # Perform docker deploy
 if [[ "$stage_docker" == "true" ]]; then
 	echo "##########################"
@@ -157,12 +164,6 @@ if [[ "$stage_docker" == "true" ]]; then
 	fi
 
 	# Build docker image tag
-	version=$(git rev-parse --verify HEAD)
-	if [[ "$?" != "0" ]]; then
-		echo "Error: failed to get git head sha" >&2
-		exit 1
-	fi
-
 	docker_tag="$DOCKER_REPO:$version"
 
 	echo "Docker tag: $docker_tag"
@@ -181,9 +182,6 @@ if [[ "$stage_docker" == "true" ]]; then
 		echo "Error: failed to push docker image" >&2
 		exit 1
 	fi
-
-	# Set argument so that helm deploy will use correct docker tag
-	set_args="--set image.tag=$version"
 fi
 
 # Perform helm deploy actions
@@ -197,6 +195,9 @@ if [[ "$stage_deploy" == "true" || "$stage_rm_deploy" == "true" ]]; then
 		echo "Error: deploy / rm-deploy stage requires the DEPLOY_DIR environment variable to be set" >&2
 		exit 1
 	fi
+
+	# Set argument so that helm deploy will use correct docker tag
+	set_args="--set image.tag=$version"
 
 	# Helm packages
 	for pkg in $(find "$DEPLOY_DIR" -mindepth 1 -maxdepth 1 -type d); do
