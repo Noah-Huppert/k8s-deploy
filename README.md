@@ -1,3 +1,5 @@
+Project status: Complete | Maintaining
+
 # Kubernetes Deploy
 Kubernetes deployment command line tool.
 
