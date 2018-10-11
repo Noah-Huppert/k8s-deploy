@@ -10,7 +10,7 @@ Kubernetes deployment command line tool.
 
 # Overview
 The Kubernetes deploy tool packages an opinionated Kubernetes deployment 
-process into a single easy to use sript.
+process into a single easy to use script.
 
 It will complete the following steps:
 
