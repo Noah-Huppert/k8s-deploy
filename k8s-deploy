@@ -7,6 +7,7 @@
 # ARGUMENTS
 #	1. STAGES    Names of the deploy stages to run. Valid stage values are:
 #
+#	                 - up: Runs the docker and deploy stages
 #                    - docker: Builds and pushes a Docker image
 #                    - deploy: Packages and deploys Helm charts
 #                    - rm-deploy: Remove all deployed Helm charts from cluster
@@ -113,7 +114,11 @@ stage_deploy="false"
 stage_rm_deploy="false"
 
 while [ ! -z "$1" ]; do
-	if [[ "$1" == "docker" ]]; then
+	if [[ "$1" == "up" ]]; then
+		stage_docker="true"
+		stage_deploy="true"
+
+	elif [[ "$1" == "docker" ]]; then
 		stage_docker="true"
 
 	elif [[ "$1" == "deploy" ]]; then
